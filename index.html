@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="KALPA Attendance - Personal attendance management app with KALPA AI assistant" />
+    <title>KALPA Attendance</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --card: rgba(255,255,255,0.88);
+        --card-strong: #ffffff;
+        --foreground: #0f172a;
+        --muted: #64748b;
+        --border: rgba(148,163,184,0.25);
+        --primary: #0f172a;
+        --primary-soft: #e2e8f0;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --warning: #eab308;
+        --text-on-warning: #1f2937;
+        --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      }
+
+      html.dark {
+        --bg: #09111d;
+        --card: rgba(15, 23, 42, 0.9);
+        --card-strong: #0f172a;
+        --foreground: #edf6ff;
+        --muted: #94a3b8;
+        --border: rgba(148,163,184,0.22);
+        --primary: #f8fafc;
+        --primary-soft: rgba(148,163,184,0.15);
+        --success: #22c55e;
+        --danger: #f87171;
+        --warning: #facc15;
+        --text-on-warning: #111827;
+        --shadow: 0 18px 45px rgba(2, 6, 23, 0.52);
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--foreground);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button, input, textarea, select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+      }
+
+      .app-shell {
+        min-height: 100vh;
+        background: radial-gradient(circle at top, rgba(37,99,235,0.12), transparent 32%), var(--bg);
+        display: flex;
+        justify-content: center;
+      }
+
+      .app-main {
+        width: min(100%, 480px);
+        padding: 16px 16px 120px 16px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 16px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .eyebrow {
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .title {
+        font-size: clamp(1.45rem, 3vw, 1.9rem);
+        font-weight: 700;
+        margin-top: 6px;
+      }
+
+      .theme-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--primary-soft);
+        color: var(--foreground);
+        font-size: 1.2rem;
+        flex-shrink: 0;
+      }
+
+      .hero-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .muted-text {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .time-text {
+        font-size: clamp(1.8rem, 5.6vw, 2.6rem);
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 0.8rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .mark-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .status-btn {
+        min-height: 56px;
+        border-radius: 14px;
+        color: white;
+        font-size: 1rem;
+        font-weight: 700;
+        transition: transform 0.1s;
+      }
+
+      .status-btn:active {
+        transform: scale(0.95);
+      }
+
+      .status-btn.present {
+        background: linear-gradient(135deg, var(--success), #22c55e);
+        box-shadow: 0 8px 18px rgba(34, 197, 94, 0.28);
+      }
+
+      .status-btn.absent {
+        background: linear-gradient(135deg, var(--danger), #ef4444);
+        box-shadow: 0 8px 18px rgba(239, 68, 68, 0.28);
+      }
+
+      .status-btn.leave {
+        background: linear-gradient(135deg, var(--warning), #f59e0b);
+        color: var(--text-on-warning);
+        box-shadow: 0 8px 18px rgba(234, 179, 8, 0.25);
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .section-header h3, .section-header h4 {
+        font-size: 1.04rem;
+      }
+
+      .inline-btn, .small-btn {
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.78rem;
+        background: var(--primary-soft);
+        color: var(--foreground);
+        transition: opacity 0.1s;
+      }
+
+      .inline-btn:active, .small-btn:active {
+        opacity: 0.8;
+      }
+
+      .small-btn {
+        padding: 7px 10px;
+      }
+
+      .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .history-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .history-item:last-child {
+        border-bottom: none;
+      }
+
+      .history-left {
+        flex: 1;
+      }
+
+      .history-date {
+        font-weight: 700;
+        margin-bottom: 5px;
+      }
+
+      .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .status-text {
+        font-weight: 700;
+      }
+
+      .report-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .report-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .metric-box, .report-box {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        border: 1px solid var(--border);
+        background: rgba(148, 163, 184, 0.04);
+        border-radius: 14px;
+        padding: 12px 10px;
+      }
+
+      .metric-box span, .report-box span {
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+
+      .metric-box strong, .report-box strong {
+        font-size: 1.2rem;
+      }
+
+      .report-box.danger { border-color: rgba(220, 38, 38, 0.25); }
+      .report-box.warning { border-color: rgba(234, 179, 8, 0.25); }
+      .report-box.primary { border-color: rgba(59, 130, 246, 0.28); }
+
+      .calendar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .calendar-header h3 {
+        font-size: 1.04rem;
+      }
+
+      .nav-mini {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--primary-soft);
+        color: var(--foreground);
+        font-size: 1.2rem;
+      }
+
+      .day-names {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .calendar-cell {
+        position: relative;
+        min-height: 48px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(148,163,184,0.02);
+        color: var(--foreground);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .calendar-cell.empty {
+        visibility: hidden;
+        border: none;
+        background: transparent;
+      }
+
+      .calendar-cell.selected {
+        outline: 2px solid rgba(59,130,246,0.75);
+      }
+
+      .dot {
+        position: absolute;
+        bottom: 6px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+
+      .detail-card {
+        margin-top: 16px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: rgba(148,163,184,0.04);
+      }
+
+      .detail-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .detail-row:last-child {
+        border-bottom: none;
+      }
+
+      .empty-note {
+        padding: 16px 0 6px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .chat-card {
+        padding-bottom: 12px;
+      }
+
+      .chat-box {
+        max-height: 320px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(148,163,184,0.04);
+      }
+
+      .chat-bubble {
+        max-width: 80%;
+        padding: 10px 12px;
+        border-radius: 14px;
+        line-height: 1.5;
+        word-wrap: break-word;
+      }
+
+      .chat-bubble.kalpa {
+        align-self: flex-start;
+        background: var(--primary-soft);
+        color: var(--foreground);
+      }
+
+      .chat-bubble.user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        color: white;
+      }
+
+      .chat-actions {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+      }
+
+      .chat-actions input {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(148,163,184,0.04);
+        color: var(--foreground);
+        padding: 10px 12px;
+      }
+
+      .mic-btn, .send-btn {
+        border-radius: 12px;
+        color: white;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        padding: 10px 14px;
+        font-weight: 700;
+        transition: opacity 0.1s;
+      }
+
+      .mic-btn:active, .send-btn:active {
+        opacity: 0.8;
+      }
+
+      .send-btn {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+      }
+
+      .hidden-section {
+        display: none;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 16px;
+        transform: translateX(-50%);
+        width: min(calc(100% - 20px), 460px);
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 4px;
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid rgba(148,163,184,0.2);
+        border-radius: 18px;
+        padding: 8px;
+        backdrop-filter: blur(18px);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.28);
+        z-index: 100;
+      }
+
+      .nav-item {
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.75);
+        padding: 10px 6px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        transition: background 0.2s;
+      }
+
+      .nav-item.active {
+        background: rgba(255,255,255,0.12);
+        color: white;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.52);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 200;
+      }
+
+      .modal-card {
+        width: min(100%, 420px);
+        max-height: 80vh;
+        overflow-y: auto;
+        background: var(--card-strong);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+      }
+
+      .modal-card h3 {
+        margin-bottom: 14px;
+        font-size: 1.1rem;
+      }
+
+      .modal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .modal-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .modal-grid input, .modal-grid select, .modal-grid textarea {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(148,163,184,0.04);
+        color: var(--foreground);
+        padding: 10px 12px;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .modal-actions button {
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.8rem;
+      }
+
+      .modal-actions .secondary-btn {
+        background: var(--primary-soft);
+        color: var(--foreground);
+      }
+
+      .modal-actions .primary-btn {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white;
+      }
+
+      @media (max-width: 380px) {
+        .app-main {
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+
+        .mark-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .chat-actions {
+          grid-template-columns: 1fr auto;
+        }
+
+        .chat-actions .send-btn {
+          grid-column: span 2;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <main class="app-main">
+        <header class="card topbar">
+          <div>
+            <p class="eyebrow">Employee</p>
+            <h1 class="title">DIPUL KUMAR</h1>
+          </div>
+          <button type="button" class="theme-btn" id="themeToggle" aria-label="Toggle theme">🌙</button>
+        </header>
+
+        <section class="card">
+          <div class="hero-row">
+            <div>
+              <p class="muted-text" id="fullDate">Loading...</p>
+              <h2 class="time-text" id="currentTime">--:--</h2>
+            </div>
+            <div id="todayStatusPill" class="status-pill">Not marked</div>
+          </div>
+
+          <div class="mark-grid">
+            <button class="status-btn present" data-status="PRESENT" type="button">Present</button>
+            <button class="status-btn absent" data-status="ABSENT" type="button">Absent</button>
+            <button class="status-btn leave" data-status="LEAVE" type="button">Leave</button>
+          </div>
+        </section>
+
+        <section id="homeSection" class="card">
+          <div class="section-header">
+            <h3>Attendance History</h3>
+            <button type="button" class="inline-btn" data-nav="history">View all</button>
+          </div>
+          <div id="historyPreview" class="history-list"></div>
+        </section>
+
+        <section id="calendarSection" class="card hidden-section">
+          <div class="calendar-header">
+            <button type="button" class="nav-mini" id="prevMonth">‹</button>
+            <h3 id="monthLabel">Month</h3>
+            <button type="button" class="nav-mini" id="nextMonth">›</button>
+          </div>
+
+          <div class="day-names">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+
+          <div id="selectedDateDetail" class="detail-card" style="display:none;"></div>
+        </section>
+
+        <section id="historySection" class="card hidden-section">
+          <div class="section-header">
+            <h3>Attendance History</h3>
+          </div>
+          <div id="fullHistoryList" class="history-list"></div>
+        </section>
+
+        <section id="reportsSection" class="card hidden-section">
+          <div class="section-header">
+            <h3>Monthly Report</h3>
+          </div>
+          <div class="report-grid" id="reportGrid"></div>
+        </section>
+
+        <section id="kalpaSection" class="card chat-card hidden-section">
+          <div class="section-header">
+            <h3>KALPA AI</h3>
+          </div>
+
+          <div id="chatBox" class="chat-box">
+            <div class="chat-bubble kalpa">DIPUL, aaj tum duty jaoge ya nahi?</div>
+          </div>
+
+          <div class="chat-actions">
+            <input id="kalpaInput" type="text" placeholder="Type in Hindi/Hinglish/English..." />
+            <button type="button" id="micBtn" class="mic-btn">🎙️</button>
+            <button type="button" id="sendBtn" class="send-btn">Send</button>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Bottom navigation">
+        <button type="button" class="nav-item active" data-nav="home">Home</button>
+        <button type="button" class="nav-item" data-nav="calendar">Calendar</button>
+        <button type="button" class="nav-item" data-nav="history">History</button>
+        <button type="button" class="nav-item" data-nav="reports">Reports</button>
+        <button type="button" class="nav-item" data-nav="kalpa">KALPA</button>
+      </nav>
+    </div>
+
+    <div id="editModal" class="modal-backdrop" style="display:none;">
+      <div class="modal-card">
+        <h3>Edit Attendance</h3>
+        <div class="modal-grid">
+          <label>
+            Date
+            <input id="editDate" type="date" />
+          </label>
+          <label>
+            Status
+            <select id="editStatus">
+              <option value="PRESENT">Present</option>
+              <option value="ABSENT">Absent</option>
+              <option value="LEAVE">Leave</option>
+            </select>
+          </label>
+          <label>
+            Check-in
+            <input id="editCheckIn" type="time" />
+          </label>
+          <label>
+            Check-out
+            <input id="editCheckOut" type="time" />
+          </label>
+          <label class="full-width">
+            Notes
+            <textarea id="editNotes" rows="3" placeholder="Notes"></textarea>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="secondary-btn" id="cancelEdit">Cancel</button>
+          <button type="button" class="primary-btn" id="saveEdit">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEY = 'kalpaAttendanceRecords_v1';
+      const THEME_KEY = 'kalpaAttendanceTheme_v1';
+
+      const state = {
+        activeTab: 'home',
+        monthCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        selectedDate: getDateKey(new Date()),
+        editingId: null,
+        recognition: null,
+        voiceListening: false
+      };
+
+      function getDateKey(date = new Date()) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function formatTime(date = new Date()) {
+        return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function formatFullDate(date = new Date()) {
+        return date.toLocaleDateString('en-IN', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+      }
+
+      function statusColor(status) {
+        if (status === 'PRESENT') return '#16a34a';
+        if (status === 'ABSENT') return '#dc2626';
+        if (status === 'LEAVE') return '#eab308';
+        return '#64748b';
+      }
+
+      function normalizeText(value) {
+        return String(value || '')
+          .toLowerCase()
+          .replace(/[.,!?]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function loadRecords() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveRecords(records) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      }
+
+      function getRecords() {
+        return loadRecords().sort((a, b) => b.date.localeCompare(a.date));
+      }
+
+      function upsertRecord(date, status, checkInTime = '', checkOutTime = '', notes = '') {
+        const records = getRecords();
+        const existingIndex = records.findIndex((r) => r.date === date);
+        const cleanCheckIn = status === 'PRESENT' ? (checkInTime || formatTime(new Date())) : '';
+        const cleanCheckOut = status === 'PRESENT' ? (checkOutTime || '') : '';
+
+        const record = {
+          id: existingIndex >= 0 ? records[existingIndex].id : `${date}-${Date.now()}`,
+          date,
+          status,
+          checkInTime: cleanCheckIn,
+          checkOutTime: cleanCheckOut,
+          notes
+        };
+
+        if (existingIndex >= 0) {
+          records[existingIndex] = record;
+        } else {
+          records.push(record);
+        }
+
+        saveRecords(records.sort((a, b) => b.date.localeCompare(a.date)));
+        renderAll();
+      }
+
+      function getRecordForDate(date) {
+        return getRecords().find((r) => r.date === date) || null;
+      }
+
+      function getKalpaReply(status, time) {
+        if (status === 'PRESENT') {
+          return `Thik hai DIPUL 👍 Aaj ki PRESENT attendance lag gayi. Check-in time: ${time || '--:--'}.`;
+        }
+        if (status === 'ABSENT') {
+          return 'Thik hai DIPUL. Aaj ki ABSENT attendance lag gayi hai.';
+        }
+        return 'Thik hai DIPUL. Aaj ki LEAVE attendance lag gayi hai.';
+      }
+
+      function detectIntent(text) {
+        const value = normalizeText(text);
+        if (!value) return null;
+
+        const presentPhrases = [
+          'haan', 'ha', 'haan jaunga', 'ha jaunga', 'main jaunga', 'main duty jaunga',
+          'aaj duty jaunga', 'duty jaunga', 'yes', 'main duty par pahunch gaya',
+          'main aa gaya', 'duty par aa gaya', 'main pahunch gaya', 'jaunga', 'aa gaya'
+        ];
+
+        const absentPhrases = [
+          'nahi', 'nahi jaunga', 'main nahi jaunga', 'aaj duty nahi jaunga',
+          'main duty nahi jaunga', 'aaj duty nahi hai', 'no'
+        ];
+
+        const leavePhrases = [
+          'leave', 'chhutti', 'chhutti hai', 'aaj chhutti hai', 'today leave', 'today chhutti'
+        ];
+
+        const hasPresent = presentPhrases.some((phrase) => value.includes(phrase));
+        const hasAbsent = absentPhrases.some((phrase) => value.includes(phrase));
+        const hasLeave = leavePhrases.some((phrase) => value.includes(phrase));
+
+        if (hasPresent && !hasAbsent && !hasLeave) return 'PRESENT';
+        if (hasAbsent && !hasPresent && !hasLeave) return 'ABSENT';
+        if (hasLeave && !hasPresent && !hasAbsent) return 'LEAVE';
+        return null;
+      }
+
+      function addChatMessage(text, from) {
+        const chatBox = document.getElementById('chatBox');
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${from}`;
+        bubble.textContent = text;
+        chatBox.appendChild(bubble);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      }
+
+      function handleUserSpeech(text) {
+        const clean = String(text || '').trim();
+        if (!clean) return;
+
+        addChatMessage(clean, 'user');
+
+        const intent = detectIntent(clean);
+        if (!intent) {
+          const response = 'Main samajh nahi paaya. Kya aap duty karoge, nahi karoge ya chhutti chahte ho?';
+          addChatMessage(response, 'kalpa');
+          speakText(response);
+          return;
+        }
+
+        const today = getDateKey(new Date());
+        const currentTime = formatTime(new Date());
+        const isPresent = intent === 'PRESENT';
+        upsertRecord(today, intent, isPresent ? currentTime : '', '', clean);
+
+        const reply = getKalpaReply(intent, isPresent ? currentTime : undefined);
+        addChatMessage(reply, 'kalpa');
+        speakText(reply);
+      }
+
+      function renderStatusPill() {
+        const today = getDateKey(new Date());
+        const todayRecord = getRecordForDate(today);
+        const pill = document.getElementById('todayStatusPill');
+
+        if (!todayRecord) {
+          pill.textContent = 'Not marked';
+          pill.style.background = 'rgba(148,163,184,0.14)';
+          pill.style.color = '#64748b';
+          return;
+        }
+
+        pill.textContent = todayRecord.status;
+        pill.style.background = `${statusColor(todayRecord.status)}22`;
+        pill.style.color = statusColor(todayRecord.status);
+      }
+
+      function renderHistoryPreview() {
+        const records = getRecords().slice(0, 5);
+        const container = document.getElementById('historyPreview');
+        if (!records.length) {
+          container.innerHTML = '<div class="empty-note">No attendance yet.</div>';
+          return;
+        }
+
+        container.innerHTML = records.map((record) => `
+          <div class="history-item">
+            <div class="history-left">
+              <div class="history-date">${record.date}</div>
+              <div class="meta-row">
+                <span class="status-text" style="color:${statusColor(record.status)}">${record.status}</span>
+                <span>${record.checkInTime || '--:--'}</span>
+              </div>
+            </div>
+            <button type="button" class="small-btn" data-edit-id="${record.id}">Edit</button>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('[data-edit-id]').forEach((button) => {
+          button.addEventListener('click', () => openEditModal(button.getAttribute('data-edit-id')));
+        });
+      }
+
+      function renderFullHistory() {
+        const records = getRecords();
+        const container = document.getElementById('fullHistoryList');
+        if (!records.length) {
+          container.innerHTML = '<div class="empty-note">No attendance yet.</div>';
+          return;
+        }
+
+        container.innerHTML = records.map((record) => `
+          <div class="history-item">
+            <div class="history-left">
+              <div class="history-date">${record.date}</div>
+              <div class="meta-row">
+                <span class="status-text" style="color:${statusColor(record.status)}">${record.status}</span>
+                <span>${record.checkInTime || '--:--'}</span>
+              </div>
+            </div>
+            <button type="button" class="small-btn" data-edit-id="${record.id}">Edit</button>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('[data-edit-id]').forEach((button) => {
+          button.addEventListener('click', () => openEditModal(button.getAttribute('data-edit-id')));
+        });
+      }
+
+      function renderCalendar() {
+        const year = state.monthCursor.getFullYear();
+        const month = state.monthCursor.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        const leading = firstDay.getDay();
+        const records = getRecords();
+        const grid = document.getElementById('calendarGrid');
+        const monthLabel = document.getElementById('monthLabel');
+        monthLabel.textContent = state.monthCursor.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+        const cells = [];
+        for (let i = 0; i < leading; i++) {
+          cells.push('<button type="button" class="calendar-cell empty" aria-hidden="true"></button>');
+        }
+
+        for (let day = 1; day <= totalDays; day++) {
+          const date = new Date(year, month, day);
+          const dateKey = getDateKey(date);
+          const record = records.find((r) => r.date === dateKey);
+          const isSelected = dateKey === state.selectedDate;
+          const dayClass = ['calendar-cell'];
+          if (isSelected) dayClass.push('selected');
+
+          const color = record ? statusColor(record.status) : null;
+          const colorStyle = color ? `style="background:${color}22; border-color:${color};"` : '';
+
+          cells.push(`
+            <button type="button" class="${dayClass.join(' ')}" data-date="${dateKey}" ${colorStyle}>
+              <span>${day}</span>
+              ${record ? `<i class="dot" style="background:${color};"></i>` : ''}
+            </button>
+          `);
+        }
+
+        while (cells.length % 7 !== 0) {
+          cells.push('<button type="button" class="calendar-cell empty" aria-hidden="true"></button>');
+        }
+
+        grid.innerHTML = cells.join('');
+
+        grid.querySelectorAll('[data-date]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const dateKey = button.getAttribute('data-date');
+            state.selectedDate = dateKey;
+            renderCalendar();
+            renderSelectedDateDetail();
+          });
+        });
+
+        renderSelectedDateDetail();
+      }
+
+      function renderSelectedDateDetail() {
+        const detail = document.getElementById('selectedDateDetail');
+        const record = getRecordForDate(state.selectedDate);
+
+        if (!record) {
+          detail.style.display = 'none';
+          return;
+        }
+
+        detail.style.display = 'block';
+        detail.innerHTML = `
+          <div class="section-header">
+            <h4>${record.date}</h4>
+            <button type="button" class="small-btn" data-edit-id="${record.id}">Edit</button>
+          </div>
+          <div class="detail-row"><span>Status</span><strong style="color:${statusColor(record.status)}">${record.status}</strong></div>
+          <div class="detail-row"><span>Check-in</span><strong>${record.checkInTime || '--:--'}</strong></div>
+          <div class="detail-row"><span>Check-out</span><strong>${record.checkOutTime || '--:--'}</strong></div>
+          <div class="detail-row"><span>Notes</span><strong>${record.notes || 'No notes'}</strong></div>
+        `;
+
+        detail.querySelector('[data-edit-id]').addEventListener('click', () => openEditModal(record.id));
+      }
+
+      function renderReport() {
+        const year = state.monthCursor.getFullYear();
+        const month = String(state.monthCursor.getMonth() + 1).padStart(2, '0');
+        const monthKey = `${year}-${month}`;
+        const records = getRecords().filter((r) => r.date.startsWith(monthKey));
+
+        const totalPresent = records.filter((r) => r.status === 'PRESENT').length;
+        const totalAbsent = records.filter((r) => r.status === 'ABSENT').length;
+        const totalLeave = records.filter((r) => r.status === 'LEAVE').length;
+        const denominator = records.length || 1;
+        const percentage = Math.round((totalPresent / denominator) * 100);
+
+        const grid = document.getElementById('reportGrid');
+        grid.innerHTML = `
+          <div class="report-box"><span>Total Present</span><strong>${totalPresent}</strong></div>
+          <div class="report-box danger"><span>Total Absent</span><strong>${totalAbsent}</strong></div>
+          <div class="report-box warning"><span>Total Leave</span><strong>${totalLeave}</strong></div>
+          <div class="report-box primary"><span>Attendance %</span><strong>${percentage}%</strong></div>
+        `;
+      }
+
+      function renderAll() {
+        renderStatusPill();
+        renderHistoryPreview();
+        renderFullHistory();
+        renderCalendar();
+        renderReport();
+      }
+
+      function openEditModal(id) {
+        const record = getRecords().find((r) => r.id === id);
+        if (!record) return;
+
+        state.editingId = id;
+        document.getElementById('editDate').value = record.date;
+        document.getElementById('editStatus').value = record.status;
+        document.getElementById('editCheckIn').value = record.checkInTime || '';
+        document.getElementById('editCheckOut').value = record.checkOutTime || '';
+        document.getElementById('editNotes').value = record.notes || '';
+        document.getElementById('editModal').style.display = 'flex';
+      }
+
+      function closeEditModal() {
+        state.editingId = null;
+        document.getElementById('editModal').style.display = 'none';
+      }
+
+      function saveEditedRecord() {
+        if (!state.editingId) return;
+        const records = getRecords();
+        const index = records.findIndex((r) => r.id === state.editingId);
+        if (index === -1) return;
+
+        const updated = {
+          ...records[index],
+          date: document.getElementById('editDate').value,
+          status: document.getElementById('editStatus').value,
+          checkInTime: document.getElementById('editCheckIn').value || '',
+          checkOutTime: document.getElementById('editCheckOut').value || '',
+          notes: document.getElementById('editNotes').value || ''
+        };
+
+        records[index] = updated;
+        saveRecords(records.sort((a, b) => b.date.localeCompare(a.date)));
+        closeEditModal();
+        renderAll();
+      }
+
+      function setTheme(theme) {
+        const root = document.documentElement;
+        const isDark = theme === 'dark';
+        root.classList.toggle('dark', isDark);
+        localStorage.setItem(THEME_KEY, theme);
+        document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+      }
+
+      function setActiveTab(tab) {
+        state.activeTab = tab;
+        document.querySelectorAll('.nav-item').forEach((button) => {
+          const isActive = button.getAttribute('data-nav') === tab;
+          button.classList.toggle('active', isActive);
+        });
+
+        const sectionMap = {
+          home: 'homeSection',
+          calendar: 'calendarSection',
+          history: 'historySection',
+          reports: 'reportsSection',
+          kalpa: 'kalpaSection'
+        };
+
+        Object.keys(sectionMap).forEach((key) => {
+          const section = document.getElementById(sectionMap[key]);
+          section.classList.toggle('hidden-section', key !== tab);
+        });
+      }
+
+      function attachEvents() {
+        document.getElementById('themeToggle').addEventListener('click', () => {
+          const isDark = document.documentElement.classList.contains('dark');
+          setTheme(isDark ? 'light' : 'dark');
+        });
+
+        document.querySelectorAll('.status-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            const status = button.getAttribute('data-status');
+            const today = getDateKey(new Date());
+            const currentTime = formatTime(new Date());
+            upsertRecord(today, status, status === 'PRESENT' ? currentTime : '', '', `Manual ${status}`);
+            const response = getKalpaReply(status, status === 'PRESENT' ? currentTime : undefined);
+            addChatMessage(`Manual ${status}`, 'user');
+            addChatMessage(response, 'kalpa');
+            speakText(response);
+          });
+        });
+
+        document.querySelectorAll('[data-nav]').forEach((button) => {
+          button.addEventListener('click', () => {
+            setActiveTab(button.getAttribute('data-nav'));
+          });
+        });
+
+        document.getElementById('prevMonth').addEventListener('click', () => {
+          state.monthCursor = new Date(state.monthCursor.getFullYear(), state.monthCursor.getMonth() - 1, 1);
+          renderCalendar();
+          renderReport();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+          state.monthCursor = new Date(state.monthCursor.getFullYear(), state.monthCursor.getMonth() + 1, 1);
+          renderCalendar();
+          renderReport();
+        });
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+          const input = document.getElementById('kalpaInput');
+          const text = input.value.trim();
+          if (!text) return;
+          input.value = '';
+          handleUserSpeech(text);
+        });
+
+        document.getElementById('kalpaInput').addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            document.getElementById('sendBtn').click();
+          }
+        });
+
+        document.getElementById('micBtn').addEventListener('click', () => {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          if (!SpeechRecognition) {
+            addChatMessage('Voice input is not supported in this browser.', 'kalpa');
+            return;
+          }
+
+          if (!state.recognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'hi-IN';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            recognition.onresult = (event) => {
+              const transcript = event.results[0][0].transcript;
+              handleUserSpeech(transcript);
+            };
+            recognition.onend = () => {
+              state.voiceListening = false;
+              document.getElementById('micBtn').textContent = '🎙️';
+            };
+            recognition.onerror = () => {
+              state.voiceListening = false;
+              document.getElementById('micBtn').textContent = '🎙️';
+            };
+            state.recognition = recognition;
+          }
+
+          if (!state.voiceListening) {
+            state.voiceListening = true;
+            document.getElementById('micBtn').textContent = '🎧';
+            state.recognition.start();
+          }
+        });
+
+        document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+        document.getElementById('saveEdit').addEventListener('click', saveEditedRecord);
+        document.getElementById('editModal').addEventListener('click', (event) => {
+          if (event.target.id === 'editModal') closeEditModal();
+        });
+      }
+
+      function updateClock() {
+        document.getElementById('currentTime').textContent = formatTime(new Date());
+        document.getElementById('fullDate').textContent = formatFullDate(new Date());
+      }
+
+      function initTheme() {
+        const saved = localStorage.getItem(THEME_KEY);
+        const initial = saved === 'dark' ? 'dark' : 'light';
+        setTheme(initial);
+      }
+
+      function init() {
+        initTheme();
+        attachEvents();
+        updateClock();
+        setInterval(updateClock, 1000);
+        setActiveTab('home');
+        renderAll();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    </script>
+  </body>
+</html>
